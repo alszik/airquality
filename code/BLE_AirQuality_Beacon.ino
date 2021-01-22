@@ -2,7 +2,6 @@
   BLE AirQuality Beacon for Geotab - ESP32 edition
   Measured values: Temperature, Humidity, PM 2.5, PM 10
   Sources:
-  - ESP32 libraries: https://github.com/espressif/arduino-esp32
   - Adafruit Sensor library: https://github.com/adafruit/Adafruit_Sensor
   - Adafruit BME280 library: https://github.com/adafruit/Adafruit_BME280_Library
   - Alvaro Valdebenito's PMSerial library: https://github.com/avaldebe/PMserial
