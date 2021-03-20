@@ -25,6 +25,8 @@ SerialPM pms2(PMSx003, Serial2);
 Adafruit_BME280 bme;
 // Onboard LED
 unsigned int LED = 5;
+// Battery level used as status indicator. 
+int status = 30;
 
 void setup() {
   pinMode(LED, OUTPUT);
@@ -37,11 +39,11 @@ void setup() {
   pms2.init();
   
   // Initializing the BME280 sensor
-  bool status;
-  status = bme.begin(0x76);  
-  if (!status) {
-      Serial.println("Could not find a valid BME280 sensor, check wiring!");
-      while (1);
+  bool bmestatus;
+  bmestatus = bme.begin(0x76);  
+  if (!bmestatus) {
+      Serial.println("BME280 not available, please check the wiring!");
+      status = status + 1;
   }
    
   digitalWrite(LED, LOW);
@@ -57,33 +59,63 @@ void setup() {
   advertisementData.setFlags(ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT);
 
   // Reading temperature
-  int tempval = bme.readTemperature();
+  int tempval = 0;
+  tempval = bme.readTemperature();
   Serial.printf("Temperature: %2d °C\n",tempval);  
 
   // Reading humidity
-  int humival = bme.readHumidity();
+  int humival = 0;
+  humival = bme.readHumidity();
   Serial.printf("Humidity: %2d",humival);
   Serial.print(" %\n");
 
   // Reading PM1.0, PM 2.5 and PM 10
+  int pm25val = 0;
+  int pm10val = 0;   
+  
   pms1.read();
-  if(pms1){  // successfull read
+  if(pms1){  // PMS1 ok
     // print formatted results
     Serial.printf("PMS1: PM2.5 %2d ug/m3, PM10 %2d ug/m3\n",pms1.pm25,pms1.pm10);
+    pms2.read();
+    if(pms2){  // PMS1 and PMS1 ok
+      // print formatted results
+      Serial.printf("PMS2: PM2.5 %2d ug/m3, PM10 %2d ug/m3\n",pms2.pm25,pms2.pm10);
+      pm25val = (pms1.pm25 + pms2.pm25) / 2;
+      pm10val = (pms1.pm10 + pms2.pm10) / 2;      
+    }
+    else { //PMS1 ok, but PMS2 not 
+      status = status + 4;
+      Serial.println("PMS2 not available, please check the wiring!");     
+      pm25val = pms1.pm25;
+      pm10val = pms1.pm10; 
+    }
   }
-  pms2.read();
-  if(pms2){  // successfull read
-    // print formatted results
-    Serial.printf("PMS2: PM2.5 %2d ug/m3, PM10 %2d ug/m3\n",pms2.pm25,pms2.pm10);
+  else { // PMS1 not ok
+    status = status + 2;
+    Serial.println("PMS1 not available, please check the wiring!");
+    pms2.read();
+    if(pms2){  // PMS1 not ok, but PMS2 ok
+      // print formatted results
+      Serial.printf("PMS2: PM2.5 %2d ug/m3, PM10 %2d ug/m3\n",pms2.pm25,pms2.pm10);
+      pm25val = pms2.pm25;
+      pm10val = pms2.pm10;        
+    }
+    else { //both PMS1 and PMS2 are not ok
+      status = status + 4;
+      Serial.println("PMS2 not available, please check the wiring!");
+    }
   }
-  int pm25val = (pms1.pm25 + pms2.pm25) / 2;
-  int pm10val = (pms1.pm10 + pms2.pm10) / 2;
-
   if (pm25val < 0) pm25val = 0;
   else if (pm25val > 5000) pm25val = 5000;
   if (pm10val < 0) pm10val = 0;
   else if (pm10val > 5000) pm10val = 5000;
 
+  Serial.printf("Average PM2.5: %2d ug/m3",pm25val);
+  Serial.print(" %\n");
+  Serial.printf("Average PM10:  %2d ug/m3\n",pm10val);
+
+  // Preparing the values for the payload
   float tempfval = tempval;
   byte* temparray = (byte*) &tempfval;
   float humifval = humival;
@@ -102,8 +134,8 @@ void setup() {
   manfdata[2]= 0x00;
   // TX Power Level
   manfdata[3]= 0xC6;
-  // Battery level - used as SW version number: 2.3
-  manfdata[4]= 0x17;
+  // Battery level - used as SW version number and status indicator (v3 + returncode)
+  manfdata[4]= char(status);
   // Temperature
   manfdata[5]= 0x07;
   manfdata[6]= 0x00;
@@ -125,6 +157,7 @@ void setup() {
   manfdata[19]= pm10array[2];
   manfdata[20]= pm10array[3];
 
+  Serial.print("Payload: ");
   // Debug output
   for (int i = 0; i < sizeof(manfdata); ++i) {
    Serial.print(manfdata [i], HEX);
