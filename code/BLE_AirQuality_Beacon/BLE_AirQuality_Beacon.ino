@@ -179,7 +179,7 @@ void setup() {
   //Serial.println("Entering deep sleep...");
   Serial.println("----------------------------------");
       
-  esp_deep_sleep(900000LL);
+  esp_deep_sleep(700000LL);
 }
 
 void loop() {
