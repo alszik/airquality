@@ -37,4 +37,4 @@ With this:
 
 6. Restart the IDE, open the BLE_AirQuality_Beacon.ino file, and plug in your ESP32 board to your computer with a micro-USB cable (that also supports data transfer).
 
-7. Select your board type and the port in the Tools menu, and hit the Upload button in the IDE. Congratulations, you have a working AirQuality Beacon!
+7. Select your board type and the port in the Tools menu (April2021: We are using a Lolin32, not a Lolin D32 board), and hit the Upload button in the IDE. Congratulations, you have a working AirQuality Beacon!
