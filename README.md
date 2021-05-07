@@ -33,7 +33,7 @@ With this:
 
 4. Save the file, and start the Arduino IDE again. Install the "Adafruit Unified Sensor" and the "Adafruit BME280 library" libraries using the built-in Library Manager (Tools / Manage Libraries).
 
-5. Install Alvaro Valdebenito's PMSerial library from https://github.com/avaldebe/PMserial
+5. ~~Install Alvaro Valdebenito's PMSerial library from https://github.com/avaldebe/PMserial~~ Install a legacy version of Alvaro Valdebenito's PMSerial library, temporarily hosted in this repository under "library" (more info at https://github.com/avaldebe/PMserial)
 
 6. Restart the IDE, open the BLE_AirQuality_Beacon.ino file, and plug in your ESP32 board to your computer with a micro-USB cable (that also supports data transfer).
 
